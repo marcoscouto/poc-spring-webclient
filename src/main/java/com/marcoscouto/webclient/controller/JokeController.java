@@ -10,6 +10,7 @@ import reactor.util.retry.Retry;
 import java.util.Random;
 
 import static java.time.Duration.ofMillis;
+import static reactor.util.retry.Retry.backoff;
 
 @RestController
 public class JokeController {
@@ -27,7 +28,7 @@ public class JokeController {
                 .uri("/random")
                 .retrieve()
                 .bodyToMono(Joke.class)
-                .retryWhen(Retry.backoff(2, ofMillis(backoffRandomValue())))
+                .retryWhen(backoff(2, ofMillis(backoffRandomValue())))
                 .block();
 
         return ResponseEntity.ok(joke);
