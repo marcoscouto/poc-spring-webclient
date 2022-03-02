@@ -5,6 +5,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.util.retry.Retry;
+
+import java.util.Random;
+
+import static java.time.Duration.ofMillis;
 
 @RestController
 public class JokeController {
@@ -17,8 +22,19 @@ public class JokeController {
 
     @GetMapping("/joke")
     public ResponseEntity response() {
-        var joke = client.get().uri("/random").retrieve().bodyToMono(Joke.class).block();
+
+        var joke = client.get()
+                .uri("/random")
+                .retrieve()
+                .bodyToMono(Joke.class)
+                .retryWhen(Retry.backoff(2, ofMillis(backoffRandomValue())))
+                .block();
+
         return ResponseEntity.ok(joke);
+    }
+
+    private Integer backoffRandomValue() {
+        return new Random().nextInt(600) + 100;
     }
 
 }
